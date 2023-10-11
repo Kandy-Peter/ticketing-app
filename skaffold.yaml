@@ -1,0 +1,21 @@
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: ticketing-app
+build:
+  artifacts:
+    - image: kandy0511/auth
+      context: auth
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'auth/**/*.ts'
+            dest: .
+  local:
+    push: false
+manifests:
+  rawYaml:
+    - infra/k8s/*.yaml
+deploy:
+  kubectl: {}

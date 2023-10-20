@@ -1,46 +1,104 @@
-import express, {Request, Response} from 'express'
-import { body,validationResult } from 'express-validator'
-import { UserModel } from '../models/user'
-import { RequestValidationError } from '../errors/req-validation-errors'
-import { BadRequestError } from '../errors/bad-request-error'
+import express, { Request, Response } from "express";
+import { body } from "express-validator";
+import jwt from "jsonwebtoken";
 
-const router = express.Router()
+import { UserModel } from "../models/user";
+import { Password } from "../services/password";
 
-router.get('/currentuser', (req, res) => {
-  res.send('Hello there, I am the current user!')
-})
- 
-router.post('/signup', [
-  body('email').isEmail().withMessage('Email must be valid'),
-  body('password').trim().isLength({ min: 4, max: 20 }).withMessage('Password must be between 4 and 20 characters')
-],
-async (req: Request, res: Response) => {
-  const errors = validationResult(req)
+import { validateRequest } from "../middlewares/validate-requests";
+import { currentUser } from "../middlewares/current-user";
+import { requireAuth } from "../middlewares/require-auth";
+import { BadRequestError } from "../errors/bad-request-error";
 
-  if (!errors.isEmpty()) {
-    throw new RequestValidationError(errors.array())
+const router = express.Router();
+const secret = process.env.JWT_SECRET_KEY as string;
+
+router.get("/currentuser", currentUser, requireAuth, (req: Request, res: Response) => {
+  res.send({ currentUser: req.currentUser || null });
+});
+
+router.post(
+  "/signup",
+  [
+    body("email").isEmail().withMessage("Email must be valid"),
+    body("password")
+      .trim()
+      .isLength({ min: 4, max: 20 })
+      .withMessage("Password must be between 4 and 20 characters"),
+  ],
+  async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
+    const user = await UserModel.findOne({ email });
+
+    if (user) {
+      throw new BadRequestError("Email in use");
+    }
+
+    const newUser = UserModel.build({ email, password });
+
+    await newUser.save();
+    const userJwt = jwt.sign(
+      {
+        id: newUser.id,
+        email: newUser.email,
+      },
+      secret
+    );
+
+    req.session = {
+      jwt: userJwt,
+    };
+
+    res.status(201).send(newUser);
   }
-  const { email, password } = req.body
+);
 
-  const user = await UserModel.findOne({ email });
+router.post(
+  "/signin",
+  [
+    body("email").isEmail().withMessage("Email must be valid"),
+    body("password")
+      .trim()
+      .notEmpty()
+      .withMessage("You must supply a password"),
+  ],
+  validateRequest,
+  async (req: Request, res: Response) => {
+    const { email, password } = req.body;
 
-  if (user) {
-    throw new BadRequestError('Email in use');
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      throw new BadRequestError("Invalid credentials");
+    }
+
+    const isPasswordMatch = await Password.compare(user.password, password);
+
+    if (!isPasswordMatch) {
+      throw new BadRequestError("Invalid credentials");
+    }
+
+    const userJwt = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      secret
+    );
+
+    req.session = {
+      jwt: userJwt,
+    };
+
+    res.status(200).send(user);
   }
+);
 
-  const newUser = UserModel.build({ email, password })
+router.post("/signout", (req, res) => {
+  req.session = null;
 
-  await newUser.save()
+  res.send({ message: "signed out successfully"});
+});
 
-  res.status(201).send(newUser)
-})
-
-router.post('/signin', (req, res) => {
-  res.send('Signing in!')
-})
-
-router.post('/signout', (req, res) => {
-  res.send('Signing out!')
-})
-
-export default router
+export default router;

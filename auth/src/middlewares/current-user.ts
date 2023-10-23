@@ -14,8 +14,6 @@ declare global {
   }
 }
 
-const secret = process.env.JWT_SECRET_KEY as string;
-
 export const currentUser = (
   req: Request,
   res: Response,
@@ -26,7 +24,7 @@ export const currentUser = (
   }
 
   try {
-    const payload = jwt.verify(req.session.jwt, secret) as UserPayload;
+    const payload = jwt.verify(req.session.jwt, process.env.JWT_SECRET_KEY!) as UserPayload;
     req.currentUser = payload;
   } catch (err) {}
 

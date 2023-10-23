@@ -26,6 +26,7 @@ router.post(
       .isLength({ min: 4, max: 20 })
       .withMessage("Password must be between 4 and 20 characters"),
   ],
+  validateRequest,
   async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
@@ -43,7 +44,7 @@ router.post(
         id: newUser.id,
         email: newUser.email,
       },
-      secret
+      process.env.JWT_SECRET_KEY!
     );
 
     req.session = {
@@ -84,7 +85,7 @@ router.post(
         id: user.id,
         email: user.email,
       },
-      secret
+      process.env.JWT_SECRET_KEY!
     );
 
     req.session = {

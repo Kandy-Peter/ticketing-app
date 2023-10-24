@@ -5,8 +5,7 @@ import cookieSession from 'cookie-session'
 
 import router from './routes'
 
-import { errorHandler } from './middlewares/error-handler'
-import { NotFoundError } from './errors/not-found-error'
+import { errorHandler, NotFoundError } from '@kandy-peter/common'
 
 const app = express()
 app.set('trust proxy', true) // trust traffic from proxy

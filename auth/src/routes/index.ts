@@ -5,13 +5,9 @@ import jwt from "jsonwebtoken";
 import { UserModel } from "../models/user";
 import { Password } from "../services/password";
 
-import { validateRequest } from "../middlewares/validate-requests";
-import { currentUser } from "../middlewares/current-user";
-import { requireAuth } from "../middlewares/require-auth";
-import { BadRequestError } from "../errors/bad-request-error";
+import { validateRequest, currentUser, requireAuth, BadRequestError } from "@kandy-peter/common";
 
 const router = express.Router();
-const secret = process.env.JWT_SECRET_KEY as string;
 
 router.get("/currentuser", currentUser, requireAuth, (req: Request, res: Response) => {
   res.send({ currentUser: req.currentUser || null });
@@ -49,7 +45,7 @@ router.post(
 
     req.session = {
       jwt: userJwt,
-    };
+    } as any;
 
     res.status(201).send(newUser);
   }
@@ -90,14 +86,14 @@ router.post(
 
     req.session = {
       jwt: userJwt,
-    };
+    } as any;
 
     res.status(200).send(user);
   }
 );
 
-router.post("/signout", (req, res) => {
-  req.session = null;
+router.post("/signout", (req: Request, res: Response) => {
+  req.session = null as any;
 
   res.send({ message: "signed out successfully"});
 });

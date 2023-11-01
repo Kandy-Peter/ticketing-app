@@ -1,10 +1,11 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import { app } from '../app';
 
 declare global {
-  function signin(): Promise<string[]>
+  function signin(): string[];
 }
 
 let mongo: any;
@@ -17,22 +18,11 @@ beforeAll(async () => {
     NODE_ENV: 'test',
   });
 
-  // Set up a fake MongoDB server
   mongo = await MongoMemoryServer.create();
   const mongoUri = await mongo.getUri();
 
-  // Connect mongoose to the fake MongoDB server
   await mongoose.connect(mongoUri);
 });
-
-// beforeEach(async () => {
-//   // Reset all data between tests
-//   const collections = await mongoose.connection.db.collections();
-
-//   for (let collection of collections) {
-//     await collection.deleteMany({});
-//   }
-// });
 
 afterAll(async () => {
   const collections = await mongoose.connection.db.collections();
@@ -40,19 +30,20 @@ afterAll(async () => {
   for (let collection of collections) {
     await collection.deleteMany({});
   }
-  // Stop the fake MongoDB server
+
   await mongo.stop();
   await mongoose.connection.close();
 });
 
-global.signin = async () => {
-  const email = 'test@mail.com';
-  const password = 'password';
+global.signin = () => {
+  const payload = {
+    id: 'asdfasdf',
+    email: 'test@test.com',
+  }
 
-  const response = await request(app)
-    .post('/api/users/signup')
-    .send({ email, password })
-    .expect(201);
+  const token = jwt.sign(payload, process.env.JWT_SECRET_KEY!);
+  const sessionJSON = JSON.stringify({ jwt: token });
+  const base64 = Buffer.from(sessionJSON).toString('base64');
 
-  return response.get('Set-Cookie');
+  return [`session=${base64}`];
 }

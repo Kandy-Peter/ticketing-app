@@ -3,9 +3,9 @@ import "express-async-errors"
 import { json } from 'body-parser'
 import cookieSession from 'cookie-session'
 
-// import router from './routes'
+import { TicketRouters } from './routes'
 
-import { errorHandler, NotFoundError } from '@kandy-peter/common'
+import { errorHandler, NotFoundError, currentUser } from '@kandy-peter/common'
 
 const app = express()
 app.set('trust proxy', true) // trust traffic from proxy
@@ -18,7 +18,9 @@ app.use(
   })
 )
 
-// app.use('/api/users', router)
+app.use(currentUser) // set currentUser on every request
+
+app.use('/api/tickets', TicketRouters)
 app.all('*',  async(req: Request, res: Response) => {
   throw new NotFoundError()
 })

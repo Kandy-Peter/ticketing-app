@@ -156,7 +156,6 @@ describe('GET /api/users/currentuser', () => {
 
   it('returns a 200 status code and the current user details if user is authenticated', async () => {
     const cookie = await global.signin();
-
     const response = await request(app)
       .get('/api/users/currentuser')
       .set('Cookie', cookie)

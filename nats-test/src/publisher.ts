@@ -19,6 +19,7 @@ stan.on('connect', async () => {
       id: '123',
       title: 'backetball game',
       price: 20,
+      userId: '123'
     });
   } catch (err) {
     console.error(err);

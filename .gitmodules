@@ -1,0 +1,3 @@
+[submodule "ticket-common-package"]
+	path = ticket-common-package
+	url = https://github.com/Kandy-Peter/ticket-common-package.git

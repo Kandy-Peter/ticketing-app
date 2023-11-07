@@ -9,13 +9,13 @@ const stan = nats.connect('ticketing', id, {
   url: 'http://localhost:4222',
 });
 
-stan.on('connect', () => {
+stan.on('connect', async () => {
   console.log('Publisher connected to NATS');
 
   const publisher = new TicketCreatedPublisher(stan);
 
   try {
-    publisher.publish({
+    await publisher.publish({
       id: '123',
       title: 'backetball game',
       price: 20,

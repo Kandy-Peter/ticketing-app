@@ -10,9 +10,10 @@ declare global {
 
 let mongo: any;
 
+jest.mock('../nats-wrapper');
+
 beforeAll(async () => {
   // set up environment variables
-
   process.env = Object.assign(process.env, {
     JWT_SECRET_KEY: 'asdf',
     NODE_ENV: 'test',

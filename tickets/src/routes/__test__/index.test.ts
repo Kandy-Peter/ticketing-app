@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import { app } from "../../app";
 import { Ticket } from "../../models/ticket";
 
+jest.mock("../../nats-wrapper");
+
 describe("Test tickets route handler and ticket creation", () => {
   it("has a route handler listening to /api/tickets for post requests", async () => {
     const response = await request(app).post("/api/tickets").send({});
